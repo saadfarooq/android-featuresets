@@ -7,12 +7,12 @@ buildscript {
     }
 
     dependencies {
-        classpath "com.gradle.publish:plugin-publish-plugin:0.9.6"
+//        classpath "com.gradle.publish:plugin-publish-plugin:0.9.6"
     }
 }
 
 apply plugin: 'groovy'
-apply plugin: "com.gradle.plugin-publish"
+//apply plugin: "com.gradle.plugin-publish"
 
 repositories {
     jcenter()
@@ -25,31 +25,4 @@ dependencies {
     testCompile 'junit:junit:4.12'
 }
 
-//apply from: 'tasks/gradle-mvn-publish.gradle'
-
-// Unless overridden in the pluginBundle config DSL, the project version will
-// be used as your plugin version when publishing
-version = "0.0.3"
-group = "com.github.saadfarooq"
-
-// The configuration example below shows the minimum required properties
-// configured to publish your plugin to the plugin portal
-pluginBundle {
-    website = 'https://github.com/saadfarooq/android-featuresets'
-    vcsUrl = 'https://github.com/saadfarooq/android-featuresets'
-    description = 'Gradle plugin for adding feature based source sets to Android'
-    tags = ['android']
-
-    plugins {
-        featureSetsPlugin {
-            id = 'com.github.saadfarooq.featuresets'
-            displayName = 'Android featureSets plugin'
-        }
-    }
-
-    mavenCoordinates {
-        groupId = "com.github.saadfarooq"
-        artifactId = "android-featuresets"
-        version = "$project.version"
-    }
-}
+apply from: 'tasks/gradle-mvn-publish.gradle'

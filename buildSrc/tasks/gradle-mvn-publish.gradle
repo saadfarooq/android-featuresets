@@ -24,7 +24,7 @@ signing {
 group = GROUP
 version = VERSION
 
-if (project.hasProperty('nexusUsername') && project.hasProperty('nexusPassword')) {
+if (project.hasProperty('SONATYPE_NEXUS_USERNAME') && project.hasProperty('SONATYPE_NEXUS_PASSWORD')) {
     uploadArchives {
         repositories {
             mavenDeployer {
@@ -39,19 +39,18 @@ if (project.hasProperty('nexusUsername') && project.hasProperty('nexusPassword')
 
                 repository(url: repoUrl) {
                     authentication(
-                            userName: project.getProperty('nexusUsername'),
-                            password: project.getProperty('nexusPassword'))
+                            userName: project.getProperty('SONATYPE_NEXUS_USERNAME'),
+                            password: project.getProperty('SONATYPE_NEXUS_PASSWORD'))
                 }
 
                 pom.groupId = GROUP
                 pom.artifactId = POM_ARTIFACT_ID
-                pom.version = VERSION_NAME
+                pom.version = VERSION
 
                 pom.project {
                     name POM_NAME
                     packaging POM_PACKAGING
                     description POM_DESCRIPTION
-                    artifactId = POM_ARTIFACT_ID
                     url POM_URL
 
                     scm {
@@ -95,6 +94,8 @@ if (project.hasProperty('nexusUsername') && project.hasProperty('nexusPassword')
             throw new ProjectConfigurationException("CHANGELOG does not contain changes for release version: $version", null)
         }
     }
+} else {
+    throw new ProjectConfigurationException("No SONATYPE_NEXUS credential provided")
 }
 
 task printBuildScriptClasspath << {

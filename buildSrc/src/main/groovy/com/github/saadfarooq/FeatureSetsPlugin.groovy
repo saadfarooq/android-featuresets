@@ -19,7 +19,7 @@ final class FeatureSetsPlugin implements Plugin<Project> {
         FeatureSetsExtension ext = project.android.extensions.create('featureSets', FeatureSetsExtension)
         project.afterEvaluate {
             updateSourceSets (androidExtension, ext)
-
+            // have to make sure the compiler sources are updated for some reason
             project.android.applicationVariants.all { ApplicationVariant variant ->
                 def sources = variant.sourceSets.collect { AndroidSourceSet srcSet -> srcSet.java.srcDirs }
                     .inject {Set<File> acc, Set<File> fileSet -> acc.plus(fileSet)}
@@ -29,8 +29,15 @@ final class FeatureSetsPlugin implements Plugin<Project> {
     }
 
     def updateSourceSets (ExtensionAware androidExtension, FeatureSetsExtension ext) {
+        def buildTypes = androidExtension.buildTypes // will be useful later when featureSets is NamedObjectCollection
+                .collect { it.name }
+                .plus("main")
+
+        def sets = ['main', 'debug', 'release', 'test', 'testDebug', 'testRelease']
         androidExtension.sourceSets.findAll {
-            it.name != "androidTest"
+            sets.contains(it.name)
+        }.each {
+            println("----------> $it.name")
         }.each { AndroidSourceSet srcSet ->
             if (srcSet.name.contains('test')) {
                 if (srcSet.name == 'test') {

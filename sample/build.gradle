@@ -8,7 +8,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.2.2'
+        classpath 'com.android.tools.build:gradle:2.2.3'
     }
 }
 
@@ -31,11 +31,24 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+
+        someType {
+            debuggable true
+        }
     }
 
     featureSets {
         debug = ['featureDebug']
         main = ['featureMain']
+    }
+
+    productFlavors {
+        api21 {
+            minSdkVersion 21
+        }
+        full {
+            minSdkVersion 18
+        }
     }
 }
 

@@ -36,8 +36,6 @@ final class FeatureSetsPlugin implements Plugin<Project> {
         def sets = ['main', 'debug', 'release', 'test', 'testDebug', 'testRelease']
         androidExtension.sourceSets.findAll {
             sets.contains(it.name)
-        }.each {
-            println("----------> $it.name")
         }.each { AndroidSourceSet srcSet ->
             if (srcSet.name.contains('test')) {
                 if (srcSet.name == 'test') {

@@ -26,6 +26,7 @@ class FeatureSetsPlugin : Plugin<Project> {
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun processSourceSets(project: Project, androidExtension: AppExtension) {
         project.afterEvaluate {
             val featureSets = project.extensions.getByName("featureSets") as NamedDomainObjectCollection<FeatureSet>
@@ -57,7 +58,7 @@ class FeatureSetsPlugin : Plugin<Project> {
             androidExtension.applicationVariants.forEach { variant ->
                 val files = variant.sourceSets.map { it.javaDirectories }
                         .reduce { acc, i -> acc.plus(i) }
-                (variant.javaCompiler as AndroidJavaCompile).setSource(files)
+                (variant.javaCompiler as AndroidJavaCompile).source(files)
             }
         }
     }

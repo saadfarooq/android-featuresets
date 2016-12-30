@@ -12,8 +12,8 @@ buildscript {
     }
 }
 
-apply plugin: 'com.github.saadfarooq.featuresets'
 apply plugin: 'com.android.application'
+apply plugin: 'com.github.saadfarooq.featuresets'
 
 android {
     compileSdkVersion 24
@@ -31,10 +31,6 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-
-        crashlytics {
-            debuggable true
-        }
     }
 
     featureSets {
@@ -43,11 +39,11 @@ android {
         }
 
         main {
-            features 'feature3'
+            features 'feature2'
         }
 
-        crashlytics {
-            features 'feature2'
+        release {
+            features 'feature3'
         }
     }
 

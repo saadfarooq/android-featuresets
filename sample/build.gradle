@@ -12,8 +12,8 @@ buildscript {
     }
 }
 
-apply plugin: 'com.android.application'
 apply plugin: 'com.github.saadfarooq.featuresets'
+apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 24
@@ -32,14 +32,23 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
 
-        someType {
+        crashlytics {
             debuggable true
         }
     }
 
     featureSets {
-        debug = ['featureDebug']
-        main = ['featureMain']
+        debug {
+            features 'feature1'
+        }
+
+        main {
+            features 'feature3'
+        }
+
+        crashlytics {
+            features 'feature2'
+        }
     }
 
     productFlavors {

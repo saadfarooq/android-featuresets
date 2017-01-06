@@ -22,6 +22,7 @@ dependencies {
     compileOnly gradleApi()
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile 'com.android.tools.build:gradle:2.2.3'
+    compile 'org.atteo:xml-combiner:2.2'
     testCompile 'junit:junit:4.12'
 }
 

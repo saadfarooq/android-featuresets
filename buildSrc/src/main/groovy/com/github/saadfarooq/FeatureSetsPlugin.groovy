@@ -16,6 +16,7 @@ final class FeatureSetsPlugin implements Plugin<Project> {
     void apply(Project project, Object androidExtension) {
         this.project = project
         this.LOGGER = project.logger
+        FeatureSetContainer = project.container(FeatureSetContainer.class)
         FeatureSetsExtension ext = project.android.extensions.create('featureSets', FeatureSetsExtension)
         project.afterEvaluate {
             updateSourceSets (androidExtension, ext)

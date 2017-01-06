@@ -3,7 +3,7 @@ package com.github.saadfarooq;
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.api.AndroidSourceSet
-import com.github.saadfarooq.model.FeatureSet
+import com.github.saadfarooq.model.FeatureSetContainer
 import org.atteo.xmlcombiner.XmlCombiner
 import org.gradle.api.NamedDomainObjectCollection
 import org.gradle.api.Plugin
@@ -16,7 +16,7 @@ class FeatureSetsPlugin : Plugin<Project> {
 
     override fun apply(project: Project?) {
         this.LOGGER = project!!.logger // this shouldn't be null
-        val featureSetContainer = project.container(FeatureSet::class.java)
+        val featureSetContainer = project.container(FeatureSetContainer::class.java)
 
         project.extensions.add("featureSets", featureSetContainer)
         project.plugins.all {
@@ -31,11 +31,12 @@ class FeatureSetsPlugin : Plugin<Project> {
     private fun processSourceSets(project: Project, androidExtension: AppExtension) {
         project.afterEvaluate {
             androidExtension.applicationVariants.all { variant ->
+                println("Processing variant: ${variant.name}")
                 val featureSetDir = "${project.buildDir}/intermediates/manifests/featureSets"
-                val featureSets = project.extensions.getByName("featureSets") as NamedDomainObjectCollection<FeatureSet>
+                val featureSetContainer = project.extensions.getByName("featureSets") as NamedDomainObjectCollection<FeatureSetContainer>
 
-                featureSets
-                        .apply {
+                featureSetContainer
+                        .apply { // verify there is an associated buildType for each featureSetContainer
                             map { it.name }
                                     .filter { it != "main" } // main buildtypes always exists even if not defined
                                     .let {
@@ -48,11 +49,15 @@ class FeatureSetsPlugin : Plugin<Project> {
                         }.filter { it.features.isNotEmpty() }
                         .forEach { featureSet ->
                             variant.sourceSets
+                                    .filterIsInstance(AndroidSourceSet::class.java)
                                     .filter { it.name == featureSet.name }
-                                    .forEach { srcProvider ->
-                                        println("--- Before --------> $srcProvider, ${srcProvider.javaDirectories}")
-                                        featureSet.features.forEach { srcProvider.javaDirectories.add(project.file("src/$it/java")) }
-                                        println("--- After  --------> $srcProvider, ${srcProvider.javaDirectories}")
+                                    .forEach { srcSet ->
+                                        println("--- Before --------> $srcSet, ${srcSet.java}")
+                                        featureSet.features.forEach { srcSet.java.srcDir("src/$it/java") }
+                                        println("--- After --------> $srcSet, ${srcSet.java}")
+                                        println("Trying to register task: ${variant.name}")
+                                        val registerTask = project.tasks.create("register${variant.name.capitalize()}${featureSet.name.capitalize()}FeatureSets")
+                                        variant.registerJavaGeneratingTask(registerTask, featureSet.features.map { project.file("src/$it/java") })
                                     }
 
 //                            variant.sourceSets.getByName(featureSet.name) // debug, main, release

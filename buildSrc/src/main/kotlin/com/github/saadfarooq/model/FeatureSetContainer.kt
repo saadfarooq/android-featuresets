@@ -2,7 +2,7 @@ package com.github.saadfarooq.model
 
 import java.util.*
 
-class FeatureSet(val name: String) {
+class FeatureSetContainer(val name: String) {
     var features: Set<String> = HashSet()
 
     fun features(vararg args: String) {

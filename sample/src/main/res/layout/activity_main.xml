@@ -11,6 +11,7 @@
     tools:context="com.github.saadfarooq.featureset.MainActivity">
 
     <TextView
+        android:id="@+id/debug_activity"
         android:text="Hello World!"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />

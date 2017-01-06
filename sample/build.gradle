@@ -38,8 +38,13 @@ android {
     }
 
     featureSets {
-        debug = ['featureDebug']
-        main = ['featureMain']
+        debug {
+            features 'featureDebug', 'underDev'
+        }
+
+        main {
+            features 'completed'
+        }
     }
 
     productFlavors {

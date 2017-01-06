@@ -50,7 +50,12 @@ class FeatureSetsPlugin : Plugin<Project> {
                         androidExtension.sourceSets.getByName(featureSet.name) // debug, main, release
                                 ?.let { srcSet ->
                                     featureSet.features.forEach { srcSet.addSrcFolders("src/$it") }
-                                    mergeManifests(project, srcSet, featureSet.features)
+                                    LOGGER.info("Creating merge${featureSet.name.capitalize()}FeatureManifest task $srcSet")
+                                    val srcManifest = project.buildDir.resolve("intermediates/manifests/featureSets/${srcSet.name}/AndroidManifest.xml")
+                                    project.tasks.create("merge${featureSet.name.capitalize()}FeatureManifest").doLast {
+                                        mergeManifests(project, srcSet, featureSet.features, srcManifest, srcSet.manifest.srcFile)
+                                    }
+                                    srcSet.manifest.srcFile(srcManifest)
                                 }
                         val testSet = if (featureSet.name == "main") "test" else "test${featureSet.name.capitalize()}"
                         androidExtension.sourceSets.findByName(testSet)
@@ -62,7 +67,15 @@ class FeatureSetsPlugin : Plugin<Project> {
             androidExtension.applicationVariants.forEach { variant ->
                 val files = variant.sourceSets.map { it.javaDirectories }
                         .reduce { acc, i -> acc.plus(i) }
-                (variant.javaCompiler as AndroidJavaCompile).source(files)
+                val dummyGeneratingTask = project.task("register${variant.name.capitalize()}FeatureSetSrcs")
+                variant.registerJavaGeneratingTask(dummyGeneratingTask, files)
+                featureSets.map { project.getTasksByName("merge${it.name.capitalize()}FeatureManifest", false) }
+                        .flatten()
+                        .forEach {
+                            LOGGER.info("Adding $it to variant: ${variant.name}")
+                            variant.checkManifest.dependsOn(it)
+                            variant.checkManifest.mustRunAfter(it)
+                        }
             }
         }
     }

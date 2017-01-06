@@ -35,11 +35,11 @@ android {
 
     featureSets {
         debug {
-            features 'feature1'
+            features 'feature2'
         }
 
         main {
-            features 'feature2'
+            features 'feature1'
         }
 
         release {

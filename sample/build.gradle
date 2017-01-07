@@ -26,6 +26,7 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -38,8 +39,14 @@ android {
     }
 
     featureSets {
-        debug = ['featureDebug']
-        main = ['featureMain']
+        debug {
+            encapsulateTests true
+            features 'featureDebug', 'underDev'
+        }
+
+        main {
+            features 'completed'
+        }
     }
 
     productFlavors {

@@ -1,2 +1,2 @@
-#### 0.0.1
-- Added google support libs
+#### 0.0.6
+- Refactored to use container instead of extension arrays

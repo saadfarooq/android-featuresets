@@ -1,93 +1,96 @@
 package com.github.saadfarooq
 
-import com.android.build.gradle.api.AndroidSourceSet
+import com.android.build.gradle.AppExtension
 import com.android.build.gradle.api.ApplicationVariant
-import groovy.xml.XmlUtil
+import org.gradle.api.NamedDomainObjectCollection
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.ProjectConfigurationException
 import org.gradle.api.logging.Logger
-import org.gradle.api.plugins.ExtensionAware
 
 final class FeatureSetsPlugin implements Plugin<Project> {
     Logger LOGGER
     Project project
 
-    void apply(Project project, Object androidExtension) {
+    void apply(Project project, AppExtension androidExtension) {
         this.project = project
         this.LOGGER = project.logger
-        FeatureSetsExtension ext = project.android.extensions.create('featureSets', FeatureSetsExtension)
+        project.extensions.add("featureSets", project.container(FeatureSetContainer.class))
         project.afterEvaluate {
-            updateSourceSets (androidExtension, ext)
-            // have to make sure the compiler sources are updated for some reason
-            project.android.applicationVariants.all { ApplicationVariant variant ->
-                def sources = variant.sourceSets.collect { AndroidSourceSet srcSet -> srcSet.java.srcDirs }
-                    .inject {Set<File> acc, Set<File> fileSet -> acc.plus(fileSet)}
-                variant.javaCompiler.source(sources)
-            }
-        }
-    }
+            def containers = project.extensions.getByName("featureSets") as NamedDomainObjectCollection<FeatureSetContainer>
 
-    def updateSourceSets (ExtensionAware androidExtension, FeatureSetsExtension ext) {
-        def buildTypes = androidExtension.buildTypes // will be useful later when featureSets is NamedObjectCollection
-                .collect { it.name }
-                .plus("main")
+            validateFeatureSets(containers, androidExtension.buildTypes)
 
-        def sets = ['main', 'debug', 'release', 'test', 'testDebug', 'testRelease']
-        androidExtension.sourceSets.findAll {
-            sets.contains(it.name)
-        }.each { AndroidSourceSet srcSet ->
-            if (srcSet.name.contains('test')) {
-                if (srcSet.name == 'test') {
-                    addTestSrcs(srcSet, 'main', ext)
-                } else {
-                    def feature = srcSet.name.minus('test').toLowerCase()
-                    addTestSrcs(srcSet, feature, ext)
-                }
-            } else {
-                addSrcsToSet(srcSet, ext[srcSet.name])
-            }
-        }
-    }
+            containers.each { featureSetContainer ->
+                LOGGER.info("Processing feature set: ${featureSetContainer.name} with features: ${featureSetContainer.features}")
+                def srcSet = androidExtension.sourceSets.findByName(featureSetContainer.name)
+                def testSrcSetName = featureSetContainer.name == "main" ? "test" : "test${featureSetContainer.name.capitalize()}"
+                def testSrcSet = androidExtension.sourceSets.findByName(testSrcSetName)
 
-    def addTestSrcs(AndroidSourceSet srcSet, String featureName, FeatureSetsExtension ext) {
-        ['java', 'resources'].each { folder ->
-            ext[featureName]
-                .collect { "src/$srcSet.name/$it/$folder" }
-                .each { srcSet[folder].srcDir it }
-        }
-    }
+                if (!featureSetContainer.features.isEmpty() && srcSet != null) {
+                    featureSetContainer.features.each { feature ->
+                        srcSet.java.srcDir "src/${feature}/java"
+                        srcSet.res.srcDir "src/${feature}/res"
+                        srcSet.resources.srcDir "src/${feature}/resources"
+                        srcSet.assets.srcDir "src/${feature}/assets"
 
-    def addSrcsToSet(AndroidSourceSet srcSet, List<String> featureSets) {
-        ['java', 'res', 'resources', 'assets'].each { folder ->
-            featureSets
-                .collect { "src/$it/$folder" }
-                .each { srcSet[folder].srcDir it }
-            def dir = srcSet[folder].srcDirs
-            LOGGER.debug("Adding sources for $srcSet.name: $dir")
-        }
-
-        def manifests = featureSets.plus(srcSet.name)
-                .collect { project.file("src/$it/AndroidManifest.xml") }
-                .findAll { it.exists() }
-                .collect { new XmlSlurper(false, false).parse(it) }
-        if (!manifests.empty) {
-            def outXml = manifests
-                    .inject
-                    { xml1, xml2 ->
-                        xml2.application.childNodes().each {
-                            xml1.application.appendNode(it)
-                        }; return xml1
+                        if (featureSetContainer.encapsulateTests) {
+                            testSrcSet.java.srcDir "src/${feature}/test/java"
+                            testSrcSet.res.srcDir "src/${feature}/test/res"
+                            testSrcSet.resources.srcDir "src/${feature}/test/resources"
+                            testSrcSet.assets.srcDir "src/${feature}/test/assets"
+                        } else {
+                            testSrcSet.java.srcDir "src/test${feature.capitalize()}/java"
+                            testSrcSet.res.srcDir "src/test${feature.capitalize()}/res"
+                            testSrcSet.resources.srcDir "src/test${feature.capitalize()}/resources"
+                            testSrcSet.assets.srcDir "src/test${feature.capitalize()}/assets"
+                        }
                     }
-            File manifestDir = project.file([project.buildDir.path, "intermediates", "manifests", "featuresets", srcSet.name].join(File.separator))
-            manifestDir.mkdirs();
-            def manifestFile = project.file("$manifestDir/AndroidManifest.xml")
-            manifestFile.withWriter { outWriter ->
-                XmlUtil.serialize(outXml, outWriter)
-                outWriter.close()
-                LOGGER.info("Merged manifest for $srcSet.name created in: $manifestFile.path")
-                srcSet.manifest { srcFile(manifestFile) }
+
+                    def existingManifestFiles = featureSetContainer.features
+                            .collect { project.file("src/$it/AndroidManifest.xml") }
+                            .findAll { it.exists() }
+
+                    if (!existingManifestFiles.isEmpty()) {
+                        LOGGER.info("Adding a task for merging featureSet manifests ${featureSetContainer.getTaskName()}")
+                        def manifestOut = project.file("${project.buildDir}/intermediates/manifests/featureSets/${srcSet.name}/AndroidManifest.xml")
+                        project.tasks.create([name: featureSetContainer.getTaskName(),
+                                              description: "Generates merged XML files for featuresSets",
+                                              type: MergeFeatureManifestsTask.class], {
+                            logger = LOGGER
+                            mainManifest = srcSet.manifest.srcFile
+                            featureManifests = featureSetContainer.features.collect {
+                                project.file("src/$it/AndroidManifest.xml")
+                            }.findAll { it.exists() }
+                            outputFile = manifestOut
+                        })
+                        srcSet.manifest { srcFile(manifestOut) }
+                    }
+                }
             }
+
+            project.android.applicationVariants.all { ApplicationVariant variant ->
+                def sources = variant.sourceSets.collect { it.java.srcDirs }
+                        .inject { acc, fileSet -> acc.plus(fileSet) }
+                def dummyTask = project.task("register${variant.name}FeatureSetSources")
+                LOGGER.info("Registering dummy task register${variant.name}FeatureSetSources as JavaGeneratingTask")
+                variant.registerJavaGeneratingTask(dummyTask, sources) // makes sure sources are included in compile
+
+                containers.collect { project.getTasksByName(it.getTaskName(), false) }
+                        .flatten()
+                        .each {
+                    LOGGER.info("Adding $it to variant: ${variant.name}")
+                    variant.checkManifest.dependsOn(it)
+                    variant.checkManifest.mustRunAfter(it)
+                }
+            }
+        }
+    }
+
+    static void validateFeatureSets(containers, buildTypes) {
+        def diff = containers.collect { it.name }.minus(buildTypes.collect { it.name }).minus("main") // buildTypes doesn't need to contain main
+        if (!diff.isEmpty()) {
+            throw new IllegalArgumentException("FeatureSets must have a corresponding buildType, following featureSets don't: $diff")
         }
     }
 

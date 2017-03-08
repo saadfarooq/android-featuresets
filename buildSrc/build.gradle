@@ -1,15 +1,35 @@
 buildscript {
     repositories {
         jcenter()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
     }
 
-    dependencies { }
+    dependencies {
+        classpath "com.gradle.publish:plugin-publish-plugin:0.9.7"
+    }
 }
 
 apply plugin: 'groovy'
+apply plugin: "com.gradle.plugin-publish"
 
 repositories {
     jcenter()
+}
+
+pluginBundle {
+    website = 'https://github.com/saadfarooq/android-featuresets'
+    vcsUrl = 'https://github.com/saadfarooq/android-featuresets'
+    description = 'Gradle plugin for adding feature based source sets (featureSets) to Android'
+    tags = ['android', 'sourceSets', 'featureSets']
+
+    plugins {
+        greetingsPlugin {
+            id = 'com.github.saadfarooq.featuresets'
+            displayName = 'Android FeatureSets'
+        }
+    }
 }
 
 dependencies {

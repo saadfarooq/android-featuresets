@@ -25,10 +25,14 @@ pluginBundle {
     tags = ['android', 'sourceSets', 'featureSets']
 
     plugins {
-        greetingsPlugin {
+        featureSetsPlugin {
             id = 'com.github.saadfarooq.featuresets'
             displayName = 'Android FeatureSets'
         }
+    }
+
+    mavenCoordinates {
+        artifactId = "android-featuresets"
     }
 }
 

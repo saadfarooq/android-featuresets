@@ -39,7 +39,7 @@ final class FeatureSetsPlugin implements Plugin<Project> {
                             testSrcSet.res.srcDir "src/${feature}/test/res"
                             testSrcSet.resources.srcDir "src/${feature}/test/resources"
                             testSrcSet.assets.srcDir "src/${feature}/test/assets"
-                        } else {
+                        } else if (featureSetContainer.name != "main") {
                             testSrcSet.java.srcDir "src/test${feature.capitalize()}/java"
                             testSrcSet.res.srcDir "src/test${feature.capitalize()}/res"
                             testSrcSet.resources.srcDir "src/test${feature.capitalize()}/resources"
@@ -72,9 +72,20 @@ final class FeatureSetsPlugin implements Plugin<Project> {
             project.android.applicationVariants.all { ApplicationVariant variant ->
                 def sources = variant.sourceSets.collect { it.java.srcDirs }
                         .inject { acc, fileSet -> acc.plus(fileSet) }
-                def dummyTask = project.task("register${variant.name}FeatureSetSources")
-                LOGGER.info("Registering dummy task register${variant.name}FeatureSetSources as JavaGeneratingTask")
+
+                def dummyTask = project.task("register${variant.name.capitalize()}FeatureSetSources")
                 variant.registerJavaGeneratingTask(dummyTask, sources) // makes sure sources are included in compile
+
+                if (variant.unitTestVariant != null) {
+                    def dummyUnitTestTask = project.task("register${variant.name.capitalize()}FeatureSetUnitTestSources")
+
+                    def unitTestSources = variant.unitTestVariant.sourceSets
+                            .collect { it.java.srcDirs }
+                            .inject { acc, fileSet -> acc.plus(fileSet) }
+                    // TODO: figure out why this is not working and remove the work around
+//                    variant.unitTestVariant.registerJavaGeneratingTask(dummyUnitTestTask, unitTestSources)
+                    variant.unitTestVariant.javaCompiler.source(unitTestSources)
+                }
 
                 containers.collect { project.getTasksByName(it.getTaskName(), false) }
                         .flatten()

@@ -18,11 +18,11 @@ class MergeFeatureManifestsTask extends DefaultTask implements ILogger {
     def mergeManifests() {
         def merger = ManifestMerger2.newMerger(mainManifest, this, ManifestMerger2.MergeType.APPLICATION)
         merger.addFlavorAndBuildTypeManifests(*featureManifests)
-        def document = merger.merge().getMergedXmlDocument(MergingReport.MergedManifestKind.MERGED)
+        def document = merger.merge().getMergedDocument(MergingReport.MergedManifestKind.MERGED)
         outputFile.parentFile.mkdirs()
         println("Creating file: $outputFile")
         outputFile.createNewFile()
-        outputFile.write(document.prettyPrint())
+        outputFile.write(document)
     }
 
     @Override

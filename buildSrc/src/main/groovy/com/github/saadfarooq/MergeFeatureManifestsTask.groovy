@@ -16,11 +16,13 @@ class MergeFeatureManifestsTask extends DefaultTask implements ILogger {
 
     @TaskAction
     def mergeManifests() {
-        def merger = ManifestMerger2.newMerger(mainManifest, this, ManifestMerger2.MergeType.APPLICATION)
-        merger.addFlavorAndBuildTypeManifests(*featureManifests)
-        def document = merger.merge().getMergedDocument(MergingReport.MergedManifestKind.MERGED)
+        def document = ManifestMerger2.newMerger(mainManifest, this, ManifestMerger2.MergeType.APPLICATION)
+                .withFeatures(ManifestMerger2.Invoker.Feature.NO_PLACEHOLDER_REPLACEMENT)
+                .addFlavorAndBuildTypeManifests(*featureManifests)
+                .merge()
+                .getMergedDocument(MergingReport.MergedManifestKind.MERGED)
         outputFile.parentFile.mkdirs()
-        println("Creating file: $outputFile")
+        info("Creating file: $outputFile")
         outputFile.createNewFile()
         outputFile.write(document)
     }

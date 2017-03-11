@@ -4,6 +4,7 @@
 
     <application>
         <activity android:name=".DebugActivity"/>
+        <meta-data android:name="applicationId" android:value="${applicationId}"/>
     </application>
 
 </manifest>

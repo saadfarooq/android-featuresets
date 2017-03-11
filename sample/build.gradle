@@ -28,12 +28,18 @@ android {
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix '.debug'
+        }
+
         release {
+            applicationIdSuffix '.release'
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
 
         someType {
+            applicationIdSuffix '.sometype'
             debuggable true
             signingConfig signingConfigs.debug
         }

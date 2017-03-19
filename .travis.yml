@@ -1,5 +1,5 @@
 language: groovy
-install: ./gradlew clean
+install: ./gradlew clean assemble
 script: ./gradlew test
 deploy:
   provider: bintray

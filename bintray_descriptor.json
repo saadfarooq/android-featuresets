@@ -22,8 +22,8 @@
   },
   "files":
   [
-    {"includePattern": "buildSrc/build/libs/.*",
-      "uploadPattern": "jars/$2"}
+    {"includePattern": "buildSrc/build/libs/(.*)",
+      "uploadPattern": "/$1"}
   ],
   "publish": true
 }

@@ -1,6 +1,6 @@
 language: groovy
 install: ./gradlew clean
-script: ./gradlew testDebug
+script: ./gradlew test
 deploy:
   provider: bintray
   user: saadfarooq

@@ -22,7 +22,7 @@
   },
   "files":
   [
-    {"includePattern": "buildSrc/build/libs/*",
+    {"includePattern": "buildSrc/build/libs/.*",
       "uploadPattern": "jars/$2"}
   ],
   "publish": true

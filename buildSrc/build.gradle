@@ -11,6 +11,8 @@ buildscript {
     }
 }
 
+version = '0.1.0'
+
 apply plugin: 'groovy'
 apply plugin: "com.gradle.plugin-publish"
 
@@ -42,5 +44,3 @@ dependencies {
     compile 'com.android.tools.build:gradle:2.0.0'
     testCompile 'junit:junit:4.12'
 }
-
-apply from: 'tasks/gradle-mvn-publish.gradle'
